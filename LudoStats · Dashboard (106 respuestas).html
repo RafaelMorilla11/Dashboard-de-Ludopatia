@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>LudoStats · Dashboard de apuestas y educación financiera</title>
+<link rel="stylesheet" href="dashboard.css"></head><body>
+<header><h1>LudoStats · Apuestas y educación financiera</h1><p id="sub"></p></header>
+<div class="bar"><div>
+<label>Género<select id="fg"></select></label><label>Edad<select id="fa"></select></label>
+<label>Carrera<select id="fc"></select></label><label>Relación con apuestas<select id="fr"></select></label>
+<label>Mostrar valores<span><button id="bc" class="on">Cantidad</button> <button id="bp">% del grupo</button></span></label>
+<button id="rs" style="align-self:flex-end">Limpiar filtros</button></div></div>
+<main><div class="guide"><strong>Probá:</strong> cambiá los filtros o hacé clic en una barra o porción para explorar ese grupo. Podés combinar selecciones y sacarlas cuando quieras. <b>n</b> indica respuestas; “% del grupo” ayuda a comparar grupos de distinto tamaño.</div><div id="activeFilters" class="active-filters" aria-live="polite"></div><div class="kpis" id="kpis"></div><div id="root"></div></main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script src="dashboard.js" defer></script></body></html>
