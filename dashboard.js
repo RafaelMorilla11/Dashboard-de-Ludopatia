@@ -61,7 +61,7 @@ function mk(id,type,labels,sets,o={}){if(CH[id])CH[id].destroy();
  const axis={stacked:o.st,grid:{color:gr},ticks:{color:tx,autoSkip:false,font:{size:11}},max:o.max};
  const sc=type=='bar'?{x:{...axis,title:{display:true,text:o.h?(o.valueAxis||'Personas'):'Grupos',color:tx}},y:{...axis,title:{display:true,text:o.h?'Grupos':(o.valueAxis||'Personas'),color:tx}}}:type=='radar'?{r:{beginAtZero:true,max:100,ticks:{color:tx,backdropColor:'transparent',stepSize:20},grid:{color:gr},angleLines:{color:gr},pointLabels:{color:tx,font:{size:10}}}}:{};
  if(type=='bar'&&o.h){sc.x.max=o.max;sc.y.max=undefined}else if(type=='bar'){sc.y.max=o.max;sc.x.max=undefined}
- CH[id]=new Chart($(id),{type,data:{labels,datasets:sets},plugins:[ChartDataLabels],options:{indexAxis:o.h?'y':'x',responsive:true,maintainAspectRatio:false,layout:{padding:{right:o.h?44:8,top:8}},scales:sc,
+ CH[id]=new Chart($(id),{type,data:{labels,datasets:sets},plugins:[ChartDataLabels],options:{indexAxis:o.h?'y':'x',responsive:true,maintainAspectRatio:false,animation:{duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:650,easing:'easeOutQuart'},transitions:{active:{animation:{duration:180}}},layout:{padding:{right:o.h?44:8,top:8}},scales:sc,
  plugins:{legend:{display:o.leg!==false,position:'bottom',labels:{color:tx,boxWidth:12,padding:14}},datalabels:{color:c=>o.st||type=='pie'||type=='doughnut'||type=='polarArea'?'#fff':tx,font:{weight:'bold',size:10},textStrokeColor:'#101820',textStrokeWidth:2,anchor:c=>o.st?'center':'end',align:c=>o.st?'center':'end',clamp:true,clip:false,formatter:o.fm||(v=>v||''),display:c=>{const v=c.dataset.data[c.dataIndex];return !!v&&(!o.st||v>=(pct?8:2))}},
  tooltip:{callbacks:o.tt||{}}},onClick:(event,elements)=>{if(elements.length)activateChartFilter(id,elements[0].index,elements[0].datasetIndex)}}})}
 function single(id,type,m,base,order,o={}){const k=keys(m,order),v=k.map(x=>m[x]);
@@ -73,6 +73,15 @@ function stack(id,ks,fn,h){const tot=ks.map(k=>F.filter(r=>fn(r)==k).length);
  CHMETA[id]={field:STACK_FIELDS[id],values:ks,stacked:true,categoryLabel:STACK_FIELDS[id]=='a'?'Edad':STACK_FIELDS[id]=='c'?'Carrera':STACK_FIELDS[id]=='g'?'Género':'Educación financiera'};
  const ds=RK.map(q=>({label:RL[q],backgroundColor:RC[q],borderColor:'#151f2b',borderWidth:1,data:ks.map((k,i)=>{const n=F.filter(r=>fn(r)==k&&r.r==q).length;return pct?P(n,tot[i]):n})}));
  mk(id,'bar',ks.map((k,i)=>k+' (n='+tot[i]+')'),ds,{st:true,h,max:pct?100:undefined,valueAxis:pct?'% del grupo':'Personas',fm:v=>v?v+(pct?'%':''):'',tt:{label:c=>{const count=pct?Math.round(c.raw*tot[c.dataIndex]/100):c.raw;return c.dataset.label+': '+count+' personas ('+P(count,tot[c.dataIndex])+'% del grupo)'}}})}
+const KPI_ART=[
+ '<circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/>',
+ '<circle cx="12" cy="12" r="9"/><path d="M15 8.5c-.7-.8-1.6-1.2-3-1.2-3.5 0-3.6 3.5-.3 4.4 3.5.9 3.4 4.5-.2 4.5-1.4 0-2.5-.5-3.3-1.4M12 5.5v13"/>',
+ '<path d="M4 19V5m0 14h16"/><path d="m7 15 4-4 3 2 5-6"/><path d="M16 7h3v3"/>',
+ '<path d="M12 3 20 6v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="m8.5 12 2.2 2.2 4.8-5"/>',
+ '<path d="M20.5 8.8c0 4.2-8.5 10-8.5 10s-8.5-5.8-8.5-10A4.5 4.5 0 0 1 12 6.6a4.5 4.5 0 0 1 8.5 2.2Z"/>',
+ '<circle cx="9" cy="8" r="3"/><path d="M3.5 20v-1a5.5 5.5 0 0 1 11 0v1m2-8a3 3 0 1 0 0-6m1 8a5 5 0 0 1 3 4.5v.5"/>',
+ '<path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17H7.5A2.5 2.5 0 0 0 5 21.5z"/><path d="M5 4.5v17m4-15h7m-7 4h7"/>'
+];
 const N=(id,h)=>{$('n'+id).innerHTML=h};
 function renderQuickFilters(){
  const container=$('activeFilters');container.innerHTML='';
@@ -94,7 +103,7 @@ function renderQuickFilters(){
 function render(){const n=F.length,B=F.filter(r=>r.r!='N'),b=B.length,cr={N:0,P:0,A:0};F.forEach(r=>cr[r.r]++);
  $('sub').textContent=n+' respuestas analizadas de '+DATA.length+' · encuesta anónima · fuente: dashboard-ludostats-2026-10-27_1.xlsx';
  const ex=B.filter(r=>r.ex=='Sí').length,exb=B.filter(r=>r.ex).length,imp=B.filter(r=>r.af&&r.af.length).length,sed=F.filter(r=>r.ef!='Sí').length,si=F.filter(r=>r.ic=='Sí').length;
- $('kpis').innerHTML=[[n,'Respuestas en el filtro'],[P(cr.A,n)+'%','Apuesta actualmente ('+cr.A+')'],[P(b,n)+'%','Tuvo experiencia con apuestas ('+b+')'],[P(ex,exb)+'%','Superó el monto previsto (de quienes apostaron)'],[P(imp,b)+'%','Reportó algún impacto negativo'],[P(si,n)+'%','Quiere capacitación (Sí)'],[P(sed,n)+'%','Sin educación financiera previa']].map(x=>`<div class="k"><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');
+ $('kpis').innerHTML=[[n,'Respuestas en el filtro'],[P(cr.A,n)+'%','Apuesta actualmente ('+cr.A+')'],[P(b,n)+'%','Tuvo experiencia con apuestas ('+b+')'],[P(ex,exb)+'%','Superó el monto previsto (de quienes apostaron)'],[P(imp,b)+'%','Reportó algún impacto negativo'],[P(si,n)+'%','Quiere capacitación (Sí)'],[P(sed,n)+'%','Sin educación financiera previa']].map((x,i)=>`<div class="k"><svg class="k-art" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${KPI_ART[i]}</svg><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');
  single('c1','doughnut',{N:cr.N,P:cr.P,A:cr.A},n,RK,{col:RK.map(q=>RC[q])});
  $('c1').__l=1;CH.c1.data.labels=RK.map(q=>RL[q]);CH.c1.update();
  N('c1',`<b>${P(cr.N,n)}%</b> nunca apostó, <b>${P(cr.P,n)}%</b> apostó pero hoy no y <b>${P(cr.A,n)}%</b> apuesta actualmente. En total <b>${P(b,n)}%</b> ya tuvo contacto con las apuestas.`);
